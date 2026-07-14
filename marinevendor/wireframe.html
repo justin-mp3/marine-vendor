@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarineVendor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #F2F1ED;
+  --surface: #FFFFFF;
+  --ink:     #111111;
+  --ink2:    #555555;
+  --ink3:    #999999;
+  --rule:    #CCCCCC;
+  --rule2:   #111111;
+  --accent:  #D86C70;
+  --accent2: #B8484C;
+  --green:   #1E6B3C;
+  --amber:   #7A5000;
+  --blue:    #1A4FA0;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── TOPNAV ── */
+.topnav {
+  height: 48px;
+  background: var(--surface);
+  border-bottom: 2px solid var(--rule2);
+  display: grid;
+  grid-template-columns: 220px 1fr auto;
+  align-items: stretch;
+  position: sticky; top: 0; z-index: 200;
+}
+.nav-logo {
+  display: flex; align-items: center;
+  padding: 0 20px;
+  border-right: 1px solid var(--rule);
+}
+.logo-text {
+  font-size: 15px; font-weight: 900;
+  letter-spacing: -0.04em; text-transform: uppercase;
+  color: var(--ink);
+}
+.logo-text span { color: var(--accent); }
+
+.portal-tabs { display: flex; align-items: stretch; }
+.portal-tab {
+  display: flex; align-items: center;
+  padding: 0 24px;
+  border: none; border-right: 1px solid var(--rule);
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink3); cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  position: relative;
+}
+.portal-tab:hover { background: var(--bg); color: var(--ink); }
+.portal-tab.active { color: var(--accent); background: var(--surface); }
+.portal-tab.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: var(--accent);
+}
+
+.nav-meta {
+  display: flex; align-items: center;
+  padding: 0 20px;
+  border-left: 1px solid var(--rule);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink3);
+}
+
+/* ── PORTAL ── */
+.portal { display: none; }
+.portal.active { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100dvh - 48px); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+  display: flex; flex-direction: column;
+}
+.sidebar-item {
+  display: flex; align-items: center;
+  height: 40px; padding: 0 20px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink3); cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+  text-decoration: none; position: relative;
+}
+.sidebar-item:hover { background: var(--bg); color: var(--ink); }
+.sidebar-item.active {
+  color: var(--accent);
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  padding-left: 17px;
+}
+.sidebar-spacer { flex: 1; border-bottom: 1px solid var(--rule); }
+.sidebar-foot {
+  padding: 14px 20px;
+  border-top: 2px solid var(--rule2);
+}
+.sidebar-foot .fn { font-size: 13px; font-weight: 700; color: var(--ink); }
+.sidebar-foot .fo { font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink3); margin-top: 2px; }
+
+/* ── MAIN ── */
+.main { overflow-y: auto; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.ph {
+  border-bottom: 1px solid var(--rule);
+  padding: 20px 28px 16px;
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px;
+}
+.ph-title {
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 900; letter-spacing: -0.04em; text-transform: uppercase;
+  color: var(--ink); line-height: 1;
+}
+.ph-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink3); white-space: nowrap;
+}
+
+/* ── CONTENT AREA ── */
+.content { padding: 24px 28px; }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 8px;
+}
+
+/* ── STATS ── */
+.stats { display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid var(--rule); margin-bottom: 20px; }
+.stat { padding: 18px 20px; border-right: 1px solid var(--rule); background: var(--surface); }
+.stat:last-child { border-right: none; }
+.stat-val {
+  font-size: 36px; font-weight: 900;
+  letter-spacing: -0.04em; line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-val.accent { color: var(--accent); }
+.stat-val.green  { color: var(--green); }
+.stat-val.amber  { color: var(--amber); }
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink3);
+}
+
+/* ── SEARCH ── */
+.search-bar {
+  display: grid; grid-template-columns: 1fr auto auto;
+  border: 1px solid var(--rule); background: var(--surface);
+  margin-bottom: 12px;
+}
+.search-bar input {
+  border: none; background: none;
+  font-family: 'Inter', sans-serif; font-size: 14px;
+  color: var(--ink); padding: 11px 16px; outline: none;
+}
+.search-bar input::placeholder { color: var(--ink3); }
+.search-bar select {
+  border: none; border-left: 1px solid var(--rule);
+  background: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink2); padding: 0 14px; cursor: pointer; outline: none;
+}
+.search-btn {
+  border: none; border-left: 1px solid var(--rule);
+  background: var(--accent); color: #fff;
+  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0 22px; cursor: pointer; transition: background 0.1s;
+}
+.search-btn:hover { background: var(--accent2); }
+
+/* ── FILTER CHIPS ── */
+.filters { display: flex; align-items: center; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.chip {
+  height: 26px; padding: 0 12px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink3); cursor: pointer; transition: all 0.1s;
+  display: inline-flex; align-items: center;
+}
+.chip:hover { border-color: var(--ink2); color: var(--ink); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.filter-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink3); margin-left: auto;
+}
+
+/* ── PRODUCT GRID ── */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 0; border: 1px solid var(--rule); background: var(--rule); }
+.product-card {
+  background: var(--surface); padding: 18px;
+  text-align: left; color: var(--ink); cursor: pointer;
+  transition: background 0.1s;
+  border: none;
+}
+.product-card:hover { background: var(--bg); }
+.pc-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink3); margin-bottom: 6px;
+}
+.pc-name { font-size: 14px; font-weight: 700; line-height: 1.25; margin-bottom: 4px; }
+.pc-pn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--ink3); margin-bottom: 14px;
+}
+.pc-row { display: flex; align-items: center; justify-content: space-between; }
+.pc-price { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.pc-price.por { font-size: 11px; color: var(--ink3); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* ── TAGS ── */
+.tag {
+  display: inline-flex; align-items: center;
+  height: 18px; padding: 0 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+.tag-green { color: var(--green); }
+.tag-amber { color: var(--amber); }
+.tag-blue  { color: var(--blue); }
+.tag-grey  { color: var(--ink3); }
+.tag-red   { color: var(--accent); }
+.tag-lg { height: 24px; padding: 0 10px; font-size: 10px; }
+
+/* ── PANEL ── */
+.panel { border: 1px solid var(--rule); background: var(--surface); margin-bottom: 16px; }
+.panel-head {
+  height: 38px; padding: 0 16px;
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg);
+}
+.panel-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink2);
+}
+.panel-body { padding: 16px; }
+.panel-body.flush { padding: 0; }
+
+/* ── TABLE ── */
+.tbl-wrap { border: 1px solid var(--rule); background: var(--surface); margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  height: 34px; padding: 0 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink3); background: var(--bg);
+  border-bottom: 1px solid var(--rule); text-align: left;
+}
+tbody td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg); }
+.td-name { font-weight: 700; font-size: 13px; }
+.td-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink3); margin-top: 2px; letter-spacing: 0.04em; }
+
+/* ── SPEC TABLE ── */
+.specs { width: 100%; border-collapse: collapse; }
+.specs tr { border-bottom: 1px solid var(--rule); }
+.specs tr:last-child { border-bottom: none; }
+.specs td { padding: 9px 16px; font-size: 13px; }
+.specs td:first-child {
+  width: 180px; background: var(--bg);
+  border-right: 1px solid var(--rule);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink3);
+}
+.specs td:last-child { font-weight: 600; }
+
+/* ── FORMS ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--rule); background: var(--rule); }
+.form-grid.g1 { grid-template-columns: 1fr; }
+.form-grid.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.field { display: flex; flex-direction: column; gap: 0; background: var(--surface); }
+.field.span2 { grid-column: 1/-1; }
+.field label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink3); padding: 8px 12px 0;
+}
+.input {
+  height: 36px; border: none; outline: none;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+  color: var(--ink); padding: 0 12px; background: transparent;
+  border-top: 1px solid var(--rule);
+  transition: background 0.1s;
+}
+.input:focus { background: #FDF6F6; }
+select.input { cursor: pointer; background: var(--bg); }
+textarea.input { height: auto; min-height: 80px; padding: 8px 12px; resize: vertical; line-height: 1.5; border-top: 1px solid var(--rule); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.1s; border: 1px solid transparent;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+.btn-outline { background: var(--surface); color: var(--ink); border-color: var(--rule); }
+.btn-outline:hover { border-color: var(--ink); background: var(--bg); }
+.btn-ghost { background: none; color: var(--ink3); border-color: transparent; }
+.btn-ghost:hover { color: var(--ink); background: var(--bg); }
+.btn-danger { background: none; color: var(--accent); border-color: var(--accent); }
+.btn-danger:hover { background: #FDF0F0; }
+.btn-sm { height: 28px; padding: 0 12px; font-size: 10px; }
+.btn-row { display: flex; gap: 8px; align-items: center; padding-top: 4px; }
+
+/* ── ALERT ── */
+.alert {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 14px;
+  border-left: 3px solid currentColor;
+  font-size: 13px; margin-bottom: 16px;
+}
+.alert.amber { color: var(--amber); background: #FFF9EE; }
+.alert.green  { color: var(--green); background: #F0FAF4; }
+.alert.accent { color: var(--accent2); background: #FDF0F0; }
+.alert .a-dash { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; flex-shrink: 0; margin-top: 2px; }
+
+/* ── TRACKING ── */
+.track { display: grid; grid-template-columns: repeat(5,1fr); margin-bottom: 12px; position: relative; }
+.track::before { content:''; position:absolute; top:11px; left:10%; right:10%; height:1px; background:var(--rule); }
+.track-step { text-align:center; position:relative; z-index:1; }
+.ts-circle {
+  width:23px; height:23px;
+  border:2px solid var(--rule);
+  background:var(--surface);
+  margin:0 auto 6px;
+  display:flex; align-items:center; justify-content:center;
+}
+.track-step.done .ts-circle { background:var(--green); border-color:var(--green); }
+.track-step.done .ts-circle::after { content:'✓'; font-size:10px; font-weight:700; color:#fff; }
+.track-step.active .ts-circle { background:var(--accent); border-color:var(--accent); }
+.track-step.active .ts-circle::after { content:''; width:7px; height:7px; background:#fff; display:block; }
+.ts-name {
+  font-family:'JetBrains Mono', monospace;
+  font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+  color:var(--ink3);
+}
+.track-step.done .ts-name { color:var(--green); }
+.track-step.active .ts-name { color:var(--accent); }
+
+/* ── CHAT ── */
+.chat-wrap { border:1px solid var(--rule); background:var(--surface); display:flex; flex-direction:column; height:calc(100dvh - 220px); overflow:hidden; }
+.chat-body { flex:1; overflow-y:auto; padding:20px; background:var(--bg); display:flex; flex-direction:column; gap:12px; }
+.chat-msg { max-width:65%; }
+.chat-msg.us { align-self:flex-end; }
+.chat-msg.them { align-self:flex-start; }
+.chat-who { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink3); margin-bottom:4px; }
+.chat-msg.us .chat-who { text-align:right; }
+.chat-bubble { padding:10px 14px; font-size:13px; line-height:1.55; border:1px solid var(--rule); }
+.chat-msg.us .chat-bubble { background:var(--accent); color:#fff; border-color:var(--accent); }
+.chat-msg.them .chat-bubble { background:var(--surface); color:var(--ink); }
+.chat-input { padding:12px 16px; background:var(--surface); border-top:2px solid var(--rule); display:flex; gap:10px; align-items:center; }
+.chat-input input { flex:1; height:34px; border:1px solid var(--rule); padding:0 12px; font-family:'Inter',sans-serif; font-size:13px; color:var(--ink); outline:none; background:var(--bg); }
+.chat-input input:focus { border-color:var(--accent); background:#FDF6F6; }
+
+/* ── SUGGESTED ITEMS ── */
+.sugg-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:0; border:1px solid var(--rule); background:var(--rule); }
+.sugg-card { background:var(--surface); padding:12px; cursor:pointer; transition:background 0.1s; }
+.sugg-card:hover { background:var(--bg); }
+.sugg-name { font-size:13px; font-weight:700; color:var(--ink); margin-bottom:3px; }
+.sugg-pn { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink3); margin-bottom:8px; letter-spacing:0.04em; }
+.sugg-price { font-size:13px; font-weight:800; color:var(--accent); letter-spacing:-0.02em; }
+.sugg-add { display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink3); border:1px dashed var(--rule); cursor:pointer; min-height:80px; }
+.sugg-add:hover { color:var(--accent); border-color:var(--accent); }
+
+/* ── COMPARISON ── */
+.cmp { border:1px solid var(--rule); background:var(--rule); display:grid; grid-template-columns:150px repeat(3,1fr); margin-bottom:16px; }
+.cmp-cell { padding:10px 16px; background:var(--surface); border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); font-size:13px; }
+.cmp-cell:nth-child(4n) { border-right:none; }
+.cmp-head { background:var(--bg); font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink2); }
+.cmp-head.best { background:var(--accent); color:#fff; }
+.cmp-key { background:var(--bg); font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink3); }
+.cmp-val { font-size:13px; color:var(--ink); font-weight:600; }
+.cmp-val.winner { color:var(--green); font-weight:800; }
+.cmp-total { font-size:17px; font-weight:900; letter-spacing:-0.03em; }
+
+/* ── AI AGENTS ── */
+.agent-list { display:flex; flex-direction:column; gap:0; border:1px solid var(--rule); background:var(--rule); margin-bottom:16px; }
+.agent-item { background:var(--surface); display:grid; grid-template-columns:12px 1fr auto; gap:14px; padding:13px 16px; border-bottom:1px solid var(--rule); align-items:center; }
+.agent-item:last-child { border-bottom:none; }
+.a-dot { width:8px; height:8px; background:var(--green); flex-shrink:0; }
+.a-dot.idle { background:var(--rule); border:1px solid var(--ink3); }
+.a-dot.working { background:var(--amber); animation:pulse 1.4s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.a-name { font-size:13px; font-weight:700; margin-bottom:2px; }
+.a-desc { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink3); letter-spacing:0.02em; }
+
+/* ── WORKFLOW ── */
+.wf-list { display:flex; flex-direction:column; }
+.wf-item { display:grid; grid-template-columns:28px 1fr; gap:14px; padding:11px 0; border-bottom:1px solid var(--rule); align-items:flex-start; }
+.wf-item:last-child { border-bottom:none; }
+.wf-num {
+  width:22px; height:22px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
+  border:1px solid var(--rule); color:var(--ink3); background:var(--bg);
+  margin-top:2px;
+}
+.wf-num.done { background:var(--green); border-color:var(--green); color:#fff; }
+.wf-num.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.wf-label { font-size:13px; font-weight:700; padding-top:1px; }
+.wf-sub { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink3); margin-top:2px; letter-spacing:0.02em; }
+.wf-sub.green { color:var(--green); }
+.wf-sub.amber { color:var(--amber); }
+
+/* ── MARGINS ── */
+.margin-item { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid var(--rule); }
+.margin-item:last-child { border-bottom:none; }
+.margin-name { font-size:13px; color:var(--ink); }
+.margin-val { font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:var(--accent); letter-spacing:-0.02em; }
+.margin-val.green { color:var(--green); }
+.margin-val.muted { font-size:12px; color:var(--ink3); letter-spacing:0.04em; text-transform:uppercase; }
+
+/* ── CHARGE ROWS ── */
+.charge-row { display:grid; grid-template-columns:1fr 160px; border-bottom:1px solid var(--rule); }
+.charge-row:last-child { border-bottom:none; }
+.charge-key { padding:9px 14px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink3); background:var(--bg); border-right:1px solid var(--rule); }
+.charge-val input { width:100%; height:100%; border:none; background:none; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; color:var(--ink); padding:9px 14px; outline:none; }
+.charge-val input:focus { background:#FDF6F6; }
+
+/* ── TOTAL ── */
+.total-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 16px; margin-top:0;
+  background:var(--ink); color:#fff;
+}
+.total-label { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.5); }
+.total-val { font-size:24px; font-weight:900; letter-spacing:-0.04em; color:#fff; }
+
+/* ── ACTIVITY ── */
+.activity { display:flex; flex-direction:column; }
+.activity-row { display:grid; grid-template-columns:72px 1fr; gap:12px; padding:9px 16px; border-bottom:1px solid var(--rule); font-size:13px; align-items:baseline; }
+.activity-row:last-child { border-bottom:none; }
+.a-time { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink3); font-weight:700; letter-spacing:0.04em; }
+
+/* ── INLINE PRICE BIG ── */
+.price-big { font-size:26px; font-weight:900; letter-spacing:-0.04em; }
+
+/* ── INV INPUT ── */
+.inv-input { width:70px; height:28px; border:1px solid var(--rule); font-family:'Inter',sans-serif; font-size:13px; padding:0 8px; color:var(--ink); outline:none; background:var(--surface); }
+.inv-input:focus { border-color:var(--accent); background:#FDF6F6; }
+.inv-input.warn { border-color:var(--amber); }
+
+/* ── DIVIDER ── */
+hr { border:none; border-top:1px solid var(--rule); margin:14px 0; }
+
+/* ── HELPERS ── */
+.row         { display:flex; align-items:center; }
+.row-between { display:flex; align-items:center; justify-content:space-between; }
+.gap6  { gap:6px; }
+.gap8  { gap:8px; }
+.gap12 { gap:12px; }
+.mb4   { margin-bottom:4px; }
+.mb8   { margin-bottom:8px; }
+.mb12  { margin-bottom:12px; }
+.mb16  { margin-bottom:16px; }
+.mb20  { margin-bottom:20px; }
+.mt4   { margin-top:4px; }
+.mt8   { margin-top:8px; }
+.mt12  { margin-top:12px; }
+.mt16  { margin-top:16px; }
+.fw7   { font-weight:700; }
+.fw8   { font-weight:800; }
+.f11   { font-size:11px; }
+.f12   { font-size:12px; }
+.mono  { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.04em; }
+.c2    { color:var(--ink2); }
+.c3    { color:var(--ink3); }
+.c-acc { color:var(--accent); }
+.c-grn { color:var(--green); }
+.c-amb { color:var(--amber); }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+
+/* ── PRODUCT IMAGES ── */
+.pc-img {
+  margin: -18px -18px 14px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.pc-img img {
+  width: 100%; height: 150px;
+  object-fit: cover; display: block;
+  filter: grayscale(100%) contrast(1.08) brightness(0.97);
+  transition: filter 0.2s;
+}
+.product-card:hover .pc-img img { filter: grayscale(50%) contrast(1.05); }
+.pd-img { overflow: hidden; border-bottom: 1px solid var(--rule); }
+.pd-img img {
+  width: 100%; height: 280px;
+  object-fit: cover; display: block;
+  filter: grayscale(100%) contrast(1.1) brightness(0.96);
+}
+.sugg-img { margin: -12px -12px 10px; overflow: hidden; border-bottom: 1px solid var(--rule); background: var(--bg); }
+.sugg-img img {
+  width: 100%; height: 90px;
+  object-fit: cover; display: block;
+  filter: grayscale(100%) contrast(1.08);
+  transition: filter 0.2s;
+}
+.sugg-card:hover .sugg-img img { filter: grayscale(50%) contrast(1.05); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--rule); }
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="nav-logo">
+    <div class="logo-text">Marine<span>Vendor</span></div>
+  </div>
+  <div class="portal-tabs">
+    <button class="portal-tab active" onclick="switchPortal('customer')">Customer</button>
+    <button class="portal-tab" onclick="switchPortal('supplier')">Supplier</button>
+    <button class="portal-tab" onclick="switchPortal('admin')">Admin</button>
+  </div>
+  <div class="nav-meta">Pacific Marine Ltd.</div>
+</header>
+
+<!-- ═══════════════════════════ CUSTOMER ═══════════════════════════ -->
+<div class="portal active" id="portal-customer">
+  <nav class="sidebar">
+    <a class="sidebar-item active" onclick="switchView('customer','search')">Search Products</a>
+    <a class="sidebar-item" onclick="switchView('customer','product')">Product Detail</a>
+    <a class="sidebar-item" onclick="switchView('customer','rfq')">Request a Quote</a>
+    <a class="sidebar-item" onclick="switchView('customer','tracking')">Track Orders</a>
+    <a class="sidebar-item" onclick="switchView('customer','quotations')">Quotation History</a>
+    <a class="sidebar-item" onclick="switchView('customer','chat')">Support</a>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-foot">
+      <div class="fn">Pacific Marine Ltd.</div>
+      <div class="fo">Singapore</div>
+    </div>
+  </nav>
+  <main class="main">
+
+    <!-- SEARCH -->
+    <div class="view active" id="cust-search">
+      <div class="ph">
+        <div class="ph-title">Find Parts</div>
+        <div class="ph-meta">8,412 Products Indexed</div>
+      </div>
+      <div class="content">
+        <div class="search-bar">
+          <input type="text" placeholder="Search by part number, engine model, or product name..." value="MAN 5510900345">
+          <select>
+            <option>All Categories</option>
+            <option>Fuel Systems</option>
+            <option>Propulsion</option>
+            <option>Seals &amp; Gaskets</option>
+            <option>Bearings</option>
+            <option>Cooling Systems</option>
+          </select>
+          <button class="search-btn">Search</button>
+        </div>
+        <div class="filters">
+          <button class="chip on">In Stock</button>
+          <button class="chip">Price Listed</button>
+          <button class="chip">MAN Engines</button>
+          <button class="chip">CAT Engines</button>
+          <span class="filter-count">24 Results</span>
+        </div>
+        <div class="product-grid">
+          <button class="product-card" onclick="switchView('customer','product')">
+            <div class="pc-img"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/Brandstofinspuitpomp.JPG" alt="" loading="lazy"></div>
+            <div class="pc-brand">MAN Energy Solutions</div>
+            <div class="pc-name">High-Pressure Fuel Pump</div>
+            <div class="pc-pn">OEM 5510900345</div>
+            <div class="pc-row"><span class="pc-price">USD 1,240</span><span class="tag tag-green">In Stock</span></div>
+          </button>
+          <button class="product-card" onclick="switchView('customer','product')">
+            <div class="pc-img"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/06A906036F_Noozle_of_Fuel_Injector.jpg" alt="" loading="lazy"></div>
+            <div class="pc-brand">MAN Energy Solutions</div>
+            <div class="pc-name">Fuel Injection Nozzle</div>
+            <div class="pc-pn">OEM 5510822101</div>
+            <div class="pc-row"><span class="pc-price">USD 385</span><span class="tag tag-green">In Stock</span></div>
+          </button>
+          <button class="product-card" onclick="switchView('customer','product')">
+            <div class="pc-img"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a7/Head_gasket_on_block.jpg" alt="" loading="lazy"></div>
+            <div class="pc-brand">MAN Energy Solutions</div>
+            <div class="pc-name">Cylinder Head Gasket Set</div>
+            <div class="pc-pn">OEM 5510715004</div>
+            <div class="pc-row"><span class="pc-price">USD 640</span><span class="tag tag-amber">Low Stock</span></div>
+          </button>
+          <button class="product-card" onclick="switchView('customer','product')">
+            <div class="pc-img"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b9/Hel_MOW_%C5%9Bruba_01.jpg" alt="" loading="lazy"></div>
+            <div class="pc-brand">ABB Marine</div>
+            <div class="pc-name">Manganese Bronze Propeller, 4-Blade</div>
+            <div class="pc-pn">OEM ABB-P4-1800</div>
+            <div class="pc-row"><span class="pc-price por">Price on Request</span><span class="tag tag-grey">Dynamic</span></div>
+          </button>
+          <button class="product-card" onclick="switchView('customer','product')">
+            <div class="pc-img"><img src="https://upload.wikimedia.org/wikipedia/commons/4/4c/Miba_Journal_Bearing.jpg" alt="" loading="lazy"></div>
+            <div class="pc-brand">SKF</div>
+            <div class="pc-name">Stern Tube Bearing Assembly</div>
+            <div class="pc-pn">OEM SKF-STB-462</div>
+            <div class="pc-row"><span class="pc-price">USD 2,180</span><span class="tag tag-blue">Ships in 7 Days</span></div>
+          </button>
+          <button class="product-card" onclick="switchView('customer','product')">
+            <div class="pc-img"><img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Rohrbuendelwaermetauscher01.jpg" alt="" loading="lazy"></div>
+            <div class="pc-brand">Caterpillar Marine</div>
+            <div class="pc-name">Heat Exchanger Core</div>
+            <div class="pc-pn">OEM CAT-HX-3306</div>
+            <div class="pc-row"><span class="pc-price">USD 3,760</span><span class="tag tag-blue">Ships in 14 Days</span></div>
+          </button>
+          <button class="product-card" onclick="switchView('customer','product')">
+            <div class="pc-img"><img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Centrifugal_Pump.jpg" alt="" loading="lazy"></div>
+            <div class="pc-brand">Wartsila</div>
+            <div class="pc-name">Fuel Oil Booster Pump</div>
+            <div class="pc-pn">OEM WRT-BP-46C</div>
+            <div class="pc-row"><span class="pc-price por">Price on Request</span><span class="tag tag-grey">Quote Required</span></div>
+          </button>
+          <button class="product-card" onclick="switchView('customer','product')">
+            <div class="pc-img"><img src="https://upload.wikimedia.org/wikipedia/commons/a/af/CapSanDiego_Schraubenwellendichtung_SIMPLEX-StevenRohrAbdichtung.jpg" alt="" loading="lazy"></div>
+            <div class="pc-brand">Cedervall</div>
+            <div class="pc-name">Shaft Seal Housing, Type CX-300</div>
+            <div class="pc-pn">OEM CDV-SS-300</div>
+            <div class="pc-row"><span class="pc-price">USD 4,420</span><span class="tag tag-green">In Stock</span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT DETAIL -->
+    <div class="view" id="cust-product">
+      <div class="ph">
+        <div>
+          <div class="ph-title">High-Pressure Fuel Pump</div>
+          <div class="ph-meta" style="margin-top:4px">MAN Energy Solutions · OEM 5510900345 · Ready in 2–3 Business Days</div>
+        </div>
+        <span class="tag tag-green tag-lg">In Stock</span>
+      </div>
+      <div class="content">
+        <div class="panel mb16">
+          <div class="pd-img"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/Brandstofinspuitpomp.JPG" alt="High-Pressure Fuel Pump — MAN Energy Solutions" loading="lazy"></div>
+        </div>
+        <div class="grid-2 mb16">
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">Compatible Engines</span></div>
+            <div class="panel-body">
+              <div style="font-size:13px;line-height:1.9">MAN B&amp;W 6L21/31 · MAN B&amp;W 8L21/31<br>MAN B&amp;W 9L21/31 · MAN 6L27/38<br>MAN 8L27/38 · MAN 9L27/38</div>
+              <hr>
+              <div class="sec-label">Cross-Reference Numbers</div>
+              <div class="mono c3" style="line-height:1.9">5510900345 · 55109-00345 · MAN-FP-9035 · S55109-00345</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">Description</span><span class="tag tag-grey">AI Generated</span></div>
+            <div class="panel-body">
+              <p style="font-size:13px;line-height:1.7;color:var(--ink2)">High-pressure fuel pump for MAN B&amp;W 21/31 and 27/38 series marine diesels. Hardened plunger and barrel assembly, chromium steel delivery valve, integrated spill-return port. Operating pressure 400–1,050 bar. Compatible with distillate and HFO up to 700 cSt at 50°C.</p>
+              <div class="row gap6 mt8">
+                <span class="tag tag-grey">Fuel Systems</span>
+                <span class="tag tag-grey">OEM Spec</span>
+                <span class="tag tag-grey">Germany</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Specifications</span></div>
+          <div class="panel-body flush">
+            <table class="specs">
+              <tr><td>OEM Part No.</td><td>5510900345</td></tr>
+              <tr><td>Mfr Part No.</td><td>MAN-FP-9035</td></tr>
+              <tr><td>Brand</td><td>MAN Energy Solutions</td></tr>
+              <tr><td>Country of Origin</td><td>Germany</td></tr>
+              <tr><td>Weight</td><td>4.2 kg</td></tr>
+              <tr><td>Dimensions</td><td>280 × 140 × 110 mm</td></tr>
+              <tr><td>Material</td><td>Chromium Steel / Cast Iron</td></tr>
+              <tr><td>Operating Pressure</td><td>400–1,050 bar</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="row gap12 mb16">
+          <div>
+            <div class="sec-label">Quantity</div>
+            <input type="number" value="4" style="width:80px;height:36px;border:1px solid var(--rule);font-family:'Inter',sans-serif;font-size:14px;font-weight:700;padding:0 12px;outline:none;color:var(--ink)">
+          </div>
+          <div style="padding-top:18px"><span class="price-big">USD 1,240</span> <span class="mono c3">per unit</span></div>
+        </div>
+        <div class="btn-row mb20">
+          <button class="btn btn-primary" onclick="switchView('customer','rfq')">Request Quotation</button>
+          <button class="btn btn-outline">Add to Order</button>
+          <button class="btn btn-ghost">Download Datasheet</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Commonly Ordered Together</span><span class="mono c3">AI Suggested</span></div>
+          <div class="panel-body flush">
+            <div class="sugg-grid">
+              <div class="sugg-card"><div class="sugg-img"><img src="https://picsum.photos/seed/plunger7/320/180" alt="" loading="lazy"></div><div class="sugg-name">Plunger &amp; Barrel Set</div><div class="sugg-pn">OEM 5510901200</div><div class="sugg-price">USD 340</div></div>
+              <div class="sugg-card"><div class="sugg-img"><img src="https://picsum.photos/seed/valve11/320/180" alt="" loading="lazy"></div><div class="sugg-name">Delivery Valve Assembly</div><div class="sugg-pn">OEM 5510899041</div><div class="sugg-price">USD 180</div></div>
+              <div class="sugg-card"><div class="sugg-img"><img src="https://picsum.photos/seed/oring33/320/180" alt="" loading="lazy"></div><div class="sugg-name">O-Ring &amp; Seal Kit</div><div class="sugg-pn">OEM 5510902118</div><div class="sugg-price">USD 42</div></div>
+              <div class="sugg-card"><div class="sugg-img"><img src="https://picsum.photos/seed/bolt44/320/180" alt="" loading="lazy"></div><div class="sugg-name">Mounting Bolt Set M12</div><div class="sugg-pn">OEM 5510900512</div><div class="sugg-price">USD 28</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RFQ -->
+    <div class="view" id="cust-rfq">
+      <div class="ph"><div class="ph-title">Request a Quotation</div><div class="ph-meta">Response within 4 Business Hours</div></div>
+      <div class="content">
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Items Requested</span><button class="btn btn-outline btn-sm">+ Add Item</button></div>
+          <div class="panel-body flush">
+            <table>
+              <thead><tr><th>Product</th><th>OEM Part No.</th><th style="width:72px">Qty</th><th>Unit Price</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><div class="td-name">High-Pressure Fuel Pump</div><div class="td-sub">MAN B&W 6L21/31</div></td><td class="mono c3">5510900345</td><td><input type="number" value="4" class="inv-input"></td><td class="fw7">USD 1,240</td><td><button class="btn btn-ghost btn-sm">Remove</button></td></tr>
+                <tr><td><div class="td-name">Cylinder Head Gasket Set</div><div class="td-sub">MAN B&W 6L21/31</div></td><td class="mono c3">5510715004</td><td><input type="number" value="2" class="inv-input"></td><td class="fw7">USD 640</td><td><button class="btn btn-ghost btn-sm">Remove</button></td></tr>
+                <tr><td><div class="td-name">Manganese Bronze Propeller, 4-Blade</div><div class="td-sub">Custom specification</div></td><td class="mono c3">ABB-P4-1800</td><td><input type="number" value="1" class="inv-input"></td><td class="mono c3">Price on Request</td><td><button class="btn btn-ghost btn-sm">Remove</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Delivery Details</span></div>
+          <div class="panel-body flush">
+            <div class="form-grid">
+              <div class="field"><label>Delivery Port</label><input type="text" class="input" value="Singapore, Jurong Port"></div>
+              <div class="field"><label>Required By</label><input type="date" class="input" value="2026-08-15"></div>
+              <div class="field"><label>Vessel Name</label><input type="text" class="input" value="MV Pacific Voyager"></div>
+              <div class="field"><label>IMO Number</label><input type="text" class="input" value="IMO 9388809"></div>
+              <div class="field span2"><label>Special Instructions</label><textarea class="input">OEM genuine parts only. COO certificate required for Singapore MPA. Engine serial: MAN-6L21-SN447892.</textarea></div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary">Submit Request</button>
+          <button class="btn btn-outline">Save Draft</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACKING -->
+    <div class="view" id="cust-tracking">
+      <div class="ph"><div class="ph-title">Order Tracking</div><div class="ph-meta">4 Active Orders</div></div>
+      <div class="content">
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">ORD-2026-0741 · MV Pacific Voyager</span><span class="tag tag-amber">In Transit</span></div>
+          <div class="panel-body">
+            <div class="track mb16">
+              <div class="track-step done"><div class="ts-circle"></div><div class="ts-name">Confirmed</div></div>
+              <div class="track-step done"><div class="ts-circle"></div><div class="ts-name">Processing</div></div>
+              <div class="track-step done"><div class="ts-circle"></div><div class="ts-name">Dispatched</div></div>
+              <div class="track-step active"><div class="ts-circle"></div><div class="ts-name">In Transit</div></div>
+              <div class="track-step"><div class="ts-circle"></div><div class="ts-name">Delivered</div></div>
+            </div>
+            <table>
+              <thead><tr><th>Item</th><th>Qty</th><th>Status</th><th>Est. Delivery</th></tr></thead>
+              <tbody>
+                <tr><td><div class="td-name">High-Pressure Fuel Pump</div><div class="td-sub">OEM 5510900345</div></td><td>4</td><td><span class="tag tag-amber">Shipped</span></td><td>18 Jul 2026</td></tr>
+                <tr><td><div class="td-name">Cylinder Head Gasket Set</div><div class="td-sub">OEM 5510715004</div></td><td>2</td><td><span class="tag tag-amber">Shipped</span></td><td>18 Jul 2026</td></tr>
+              </tbody>
+            </table>
+            <div class="mono c3 mt8">Carrier: Omni Freight Solutions · Waybill SGSI-2026-04411 · Last Update: 13 Jul, Singapore Jurong</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">ORD-2026-0698 · MV Harbour Star</span><span class="tag tag-green">Delivered</span></div>
+          <div class="panel-body">
+            <div class="track">
+              <div class="track-step done"><div class="ts-circle"></div><div class="ts-name">Confirmed</div></div>
+              <div class="track-step done"><div class="ts-circle"></div><div class="ts-name">Processing</div></div>
+              <div class="track-step done"><div class="ts-circle"></div><div class="ts-name">Dispatched</div></div>
+              <div class="track-step done"><div class="ts-circle"></div><div class="ts-name">In Transit</div></div>
+              <div class="track-step done"><div class="ts-circle"></div><div class="ts-name">Delivered</div></div>
+            </div>
+            <div class="mono c3 mt8">Delivered 8 Jul 2026 · Received by Chief Engineer K. Ramasamy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUOTATION HISTORY -->
+    <div class="view" id="cust-quotations">
+      <div class="ph"><div class="ph-title">Quotation History</div><div class="ph-meta">12 Quotations · YTD 2026</div></div>
+      <div class="content">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Reference</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th>Valid Until</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="fw7">QT-2026-0891</td><td class="c2">13 Jul 2026</td><td>3 items</td><td class="fw7">USD 6,640</td><td><span class="tag tag-amber">Pending Acceptance</span></td><td class="c3">27 Jul 2026</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td class="fw7">QT-2026-0741</td><td class="c2">1 Jul 2026</td><td>2 items</td><td class="fw7">USD 5,960</td><td><span class="tag tag-green">Ordered</span></td><td class="c3">15 Jul 2026</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td class="fw7">QT-2026-0698</td><td class="c2">20 Jun 2026</td><td>5 items</td><td class="fw7">USD 14,280</td><td><span class="tag tag-green">Delivered</span></td><td class="c3">4 Jul 2026</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td class="fw7">QT-2026-0602</td><td class="c2">5 Jun 2026</td><td>1 item</td><td class="fw7">USD 8,900</td><td><span class="tag tag-grey">Expired</span></td><td class="c3">19 Jun 2026</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="view" id="cust-chat">
+      <div class="ph"><div class="ph-title">Support</div><div class="ph-meta">MarineVendor Procurement Team</div></div>
+      <div class="content">
+        <div class="chat-wrap">
+          <div class="chat-body">
+            <div class="chat-msg them"><div class="chat-who">MarineVendor · 09:02</div><div class="chat-bubble">Good morning. How can we assist you? Please include your vessel name and relevant part numbers.</div></div>
+            <div class="chat-msg us"><div class="chat-who">Pacific Marine · 09:18</div><div class="chat-bubble">Urgent requirement for MAN fuel pump OEM 5510900345, 4 units for MV Pacific Voyager. Need by 18 July, Singapore.</div></div>
+            <div class="chat-msg them"><div class="chat-who">MarineVendor · 09:24</div><div class="chat-bubble">Stock confirmed. Raising a quotation now — you'll have it within 30 minutes. Please confirm delivery contact at Jurong Port.</div></div>
+            <div class="chat-msg us"><div class="chat-who">Pacific Marine · 09:31</div><div class="chat-bubble">Jurong Port, Berth 21. Chief Engineer K. Ramasamy, +65 9xxx xxxx.</div></div>
+            <div class="chat-msg them"><div class="chat-who">MarineVendor · 09:33</div><div class="chat-bubble">Quotation QT-2026-0891 sent to your email. Estimated delivery 18 July. Please confirm acceptance.</div></div>
+          </div>
+          <div class="chat-input">
+            <input type="text" placeholder="Type your message...">
+            <button class="btn btn-primary">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════ SUPPLIER ═══════════════════════════ -->
+<div class="portal" id="portal-supplier">
+  <nav class="sidebar">
+    <a class="sidebar-item active" onclick="switchView('supplier','dashboard')">Dashboard</a>
+    <a class="sidebar-item" onclick="switchView('supplier','rfqresponse')">Respond to RFQ</a>
+    <a class="sidebar-item" onclick="switchView('supplier','productupload')">Upload Product</a>
+    <a class="sidebar-item" onclick="switchView('supplier','inventory')">Manage Inventory</a>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-foot"><div class="fn">Oceanic Parts Pvt. Ltd.</div><div class="fo">Mumbai, India</div></div>
+  </nav>
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="supp-dashboard">
+      <div class="ph"><div class="ph-title">Dashboard</div><div class="ph-meta">Oceanic Parts · July 2026</div></div>
+      <div class="content">
+        <div class="stats mb16">
+          <div class="stat"><div class="stat-val accent">3</div><div class="stat-label">Pending RFQs</div></div>
+          <div class="stat"><div class="stat-val amber">7</div><div class="stat-label">Stale Inventory Items</div></div>
+          <div class="stat"><div class="stat-val green">94%</div><div class="stat-label">Response Rate</div></div>
+          <div class="stat"><div class="stat-val">142</div><div class="stat-label">Active Products</div></div>
+        </div>
+        <div class="alert amber"><span class="a-dash">Alert</span>7 products haven't been updated in 45+ days. Review and confirm current stock levels.</div>
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Pending RFQs</span></div>
+          <div class="panel-body flush">
+            <table>
+              <thead><tr><th>RFQ</th><th>Product</th><th>Qty</th><th>Destination</th><th>Deadline</th><th></th></tr></thead>
+              <tbody>
+                <tr><td class="fw7 c-acc">RFQ-24871</td><td><div class="td-name">High-Pressure Fuel Pump</div><div class="td-sub">OEM 5510900345</div></td><td>4</td><td>Singapore</td><td class="fw7 c-acc">Today 14:00</td><td><button class="btn btn-primary btn-sm" onclick="switchView('supplier','rfqresponse')">Respond</button></td></tr>
+                <tr><td class="fw7">RFQ-24866</td><td><div class="td-name">Stern Tube Bearing + Shaft Seal</div><div class="td-sub">2 products</div></td><td>2+1</td><td>Mumbai</td><td class="c2">14 Jul 12:00</td><td><button class="btn btn-primary btn-sm" onclick="switchView('supplier','rfqresponse')">Respond</button></td></tr>
+                <tr><td class="fw7">RFQ-24851</td><td><div class="td-name">Cylinder Head Gasket Set</div><div class="td-sub">OEM 5510715004</div></td><td>2</td><td>Rotterdam</td><td class="c2">15 Jul 09:00</td><td><button class="btn btn-primary btn-sm" onclick="switchView('supplier','rfqresponse')">Respond</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Recent Activity</span></div>
+          <div class="activity">
+            <div class="activity-row"><span class="a-time">09:41</span><span>New RFQ: 4× Fuel Pump 5510900345 → Singapore</span></div>
+            <div class="activity-row"><span class="a-time">Yesterday</span><span>Quote accepted. Purchase order being raised.</span></div>
+            <div class="activity-row"><span class="a-time">2 days ago</span><span>RFQ-24821 closed — unavailable, re-routed automatically.</span></div>
+            <div class="activity-row"><span class="a-time">5 days ago</span><span>Inventory alert: 12 products nearing restock threshold.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RFQ RESPONSE -->
+    <div class="view" id="supp-rfqresponse">
+      <div class="ph"><div class="ph-title">RFQ-24871</div><div class="ph-meta">Deadline: Today 14:00 · Auto-calculated Totals</div></div>
+      <div class="content">
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Request Details</span></div>
+          <div class="panel-body flush">
+            <table class="specs">
+              <tr><td>Product</td><td class="fw7">High-Pressure Fuel Pump</td></tr>
+              <tr><td>OEM Part No.</td><td>5510900345</td></tr>
+              <tr><td>Quantity</td><td class="fw7">4 Units</td></tr>
+              <tr><td>Delivery To</td><td>Singapore, Jurong Port</td></tr>
+              <tr><td>Required By</td><td>18 July 2026</td></tr>
+              <tr><td>Vessel</td><td>MV Pacific Voyager</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Your Response</span></div>
+          <div class="panel-body flush">
+            <div class="form-grid" style="border:none;gap:0;background:none;border-bottom:1px solid var(--rule)">
+              <div class="field" style="border-right:1px solid var(--rule)"><label>Availability</label><select class="input"><option>Available</option><option>Not Available</option><option>Partial</option></select></div>
+              <div class="field"><label>Lead Time</label><input type="text" class="input" value="3 working days"></div>
+            </div>
+            <div class="charges">
+              <div class="charge-row"><div class="charge-key">Unit Price (INR)</div><div class="charge-val"><input type="text" value="82,500.00"></div></div>
+              <div class="charge-row"><div class="charge-key">GST %</div><div class="charge-val"><input type="text" value="18%"></div></div>
+              <div class="charge-row"><div class="charge-key">GST</div><div class="charge-val"><input type="text" value="Excluded"></div></div>
+              <div class="charge-row"><div class="charge-key">Shipping</div><div class="charge-val"><input type="text" value="12,000.00"></div></div>
+              <div class="charge-row"><div class="charge-key">Packing</div><div class="charge-val"><input type="text" value="2,400.00"></div></div>
+              <div class="charge-row"><div class="charge-key">Insurance</div><div class="charge-val"><input type="text" value="1,800.00"></div></div>
+              <div class="charge-row"><div class="charge-key">Quote Validity</div><div class="charge-val"><input type="text" value="14 days"></div></div>
+              <div class="charge-row"><div class="charge-key">Notes</div><div class="charge-val"><input type="text" value="OEM genuine, Germany. COO available."></div></div>
+            </div>
+            <div class="total-row">
+              <div class="total-label">Total · 4 Units + All Charges + 18% GST</div>
+              <div class="total-val">INR 6,57,200</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Suggest Complementary Items</span><span class="mono c3">Optional</span></div>
+          <div class="panel-body flush">
+            <div class="sugg-grid">
+              <div class="sugg-card"><div class="sugg-name">Plunger &amp; Barrel Set</div><div class="sugg-pn">OEM 5510901200</div><div class="sugg-price">INR 22,400</div></div>
+              <div class="sugg-card"><div class="sugg-name">Delivery Valve Assembly</div><div class="sugg-pn">OEM 5510899041</div><div class="sugg-price">INR 11,800</div></div>
+              <div class="sugg-add">+ Add Item</div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary">Submit Response</button>
+          <button class="btn btn-outline">Save Draft</button>
+          <button class="btn btn-danger" style="margin-left:auto">Mark Unavailable</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT UPLOAD -->
+    <div class="view" id="supp-productupload">
+      <div class="ph"><div class="ph-title">Upload a Product</div><div class="ph-meta">AI Enrichment Active</div></div>
+      <div class="content">
+        <div class="alert accent"><span class="a-dash">AI</span>Enter a part number — descriptions, specs, and compatibility will be generated automatically.</div>
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Product Identification</span></div>
+          <div class="panel-body flush">
+            <div class="form-grid">
+              <div class="field"><label>OEM Part Number</label><input type="text" class="input" value="5510900345"></div>
+              <div class="field"><label>Manufacturer Part Number</label><input type="text" class="input" value="MAN-FP-9035"></div>
+              <div class="field"><label>Brand / Manufacturer</label><input type="text" class="input" value="MAN Energy Solutions"></div>
+              <div class="field"><label>Product Category</label><select class="input"><option>Fuel Systems</option><option>Propulsion</option><option>Seals &amp; Gaskets</option></select></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">AI Enrichment</span><span class="tag tag-amber">Processing</span></div>
+          <div class="panel-body flush">
+            <div class="agent-list">
+              <div class="agent-item"><div class="a-dot"></div><div><div class="a-name">Catalogue Search</div><div class="a-desc">MAN B&W catalogue matched — 3 records found</div></div><span class="tag tag-green">Done</span></div>
+              <div class="agent-item"><div class="a-dot"></div><div><div class="a-name">Specification Extraction</div><div class="a-desc">Weight, dimensions, pressure rating, material extracted</div></div><span class="tag tag-green">Done</span></div>
+              <div class="agent-item"><div class="a-dot working"></div><div><div class="a-name">Compatibility Mapping</div><div class="a-desc">Matching engine models — 8 identified so far</div></div><span class="tag tag-amber">Running</span></div>
+              <div class="agent-item"><div class="a-dot idle"></div><div><div class="a-name">Description Generation</div><div class="a-desc">Waiting for compatibility data</div></div><span class="tag tag-grey">Queued</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Inventory &amp; Pricing</span></div>
+          <div class="panel-body flush">
+            <div class="form-grid">
+              <div class="field"><label>Quantity Available</label><input type="number" class="input" value="12"></div>
+              <div class="field"><label>Warehouse</label><input type="text" class="input" value="Mumbai — Nhava Sheva, Warehouse B"></div>
+              <div class="field"><label>Stock Type</label><select class="input"><option>Ready Stock</option><option>Made to Order</option></select></div>
+              <div class="field"><label>Lead Time</label><input type="text" class="input" value="3 working days"></div>
+              <div class="field"><label>Pricing Type</label><select class="input"><option>Fixed Price</option><option>Price on Request</option><option>Dynamic Pricing</option></select></div>
+              <div class="field"><label>Unit Price (INR)</label><input type="text" class="input" value="82,500.00"></div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary">Submit for Review</button>
+          <button class="btn btn-outline">Save Draft</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="view" id="supp-inventory">
+      <div class="ph"><div class="ph-title">Manage Inventory</div><div class="ph-meta">142 Products · 7 Need Updating</div></div>
+      <div class="content">
+        <div class="alert amber"><span class="a-dash">Alert</span>7 products flagged for stale stock. Update quantities to keep listings active.</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Product</th><th>OEM Part No.</th><th>Qty</th><th>Lead Time</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><div class="td-name">High-Pressure Fuel Pump</div></td><td class="mono c3">5510900345</td><td><input type="number" value="12" class="inv-input"></td><td><input type="text" value="3 days" class="inv-input" style="width:80px"></td><td><span class="tag tag-green">Active</span></td><td><button class="btn btn-outline btn-sm">Save</button></td></tr>
+              <tr><td><div class="td-name">Cylinder Head Gasket Set</div></td><td class="mono c3">5510715004</td><td><input type="number" value="4" class="inv-input"></td><td><input type="text" value="2 days" class="inv-input" style="width:80px"></td><td><span class="tag tag-amber">Low Stock</span></td><td><button class="btn btn-outline btn-sm">Save</button></td></tr>
+              <tr style="background:#FFFBF4"><td><div class="td-name">Stern Tube Bearing Assembly</div><div class="td-sub">Last updated 52 days ago</div></td><td class="mono c3">23234-CCK/W33</td><td><input type="number" value="2" class="inv-input warn"></td><td><input type="text" value="7 days" class="inv-input" style="width:80px"></td><td><span class="tag tag-amber">Needs Update</span></td><td><button class="btn btn-primary btn-sm">Update</button></td></tr>
+              <tr style="background:#FFFBF4"><td><div class="td-name">Shaft Seal CX-300</div><div class="td-sub">Last updated 47 days ago</div></td><td class="mono c3">CX-300-65MM</td><td><input type="number" value="6" class="inv-input warn"></td><td><input type="text" value="5 days" class="inv-input" style="width:80px"></td><td><span class="tag tag-amber">Needs Update</span></td><td><button class="btn btn-primary btn-sm">Update</button></td></tr>
+              <tr><td><div class="td-name">Fuel Injection Nozzle</div></td><td class="mono c3">5510822101</td><td><input type="number" value="28" class="inv-input"></td><td><input type="text" value="1 day" class="inv-input" style="width:80px"></td><td><span class="tag tag-green">Active</span></td><td><button class="btn btn-outline btn-sm">Save</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════ ADMIN ═══════════════════════════ -->
+<div class="portal" id="portal-admin">
+  <nav class="sidebar">
+    <a class="sidebar-item active" onclick="switchView('admin','comparison')">Quote Comparison</a>
+    <a class="sidebar-item" onclick="switchView('admin','agents')">AI Agents</a>
+    <a class="sidebar-item" onclick="switchView('admin','pricing')">Pricing Engine</a>
+    <a class="sidebar-item" onclick="switchView('admin','suppliers')">Supplier Performance</a>
+    <a class="sidebar-item" onclick="switchView('admin','workflow')">Order Workflow</a>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-foot"><div class="fn">R. Menon</div><div class="fo">Procurement Lead</div></div>
+  </nav>
+  <main class="main">
+
+    <!-- QUOTE COMPARISON -->
+    <div class="view active" id="adm-comparison">
+      <div class="ph"><div class="ph-title">Quote Comparison</div><div class="ph-meta">RFQ-24871 · Fuel Pump · 4 Units · Singapore · 3 Responses</div></div>
+      <div class="content">
+        <div class="cmp mb16">
+          <div class="cmp-cell cmp-head"></div>
+          <div class="cmp-cell cmp-head best">Supplier A <span class="tag tag-green" style="margin-left:8px;border-color:#fff;color:#fff">Best Price</span></div>
+          <div class="cmp-cell cmp-head">Supplier B</div>
+          <div class="cmp-cell cmp-head">Supplier C</div>
+
+          <div class="cmp-cell cmp-key">Unit Price (INR)</div>
+          <div class="cmp-cell cmp-val winner">82,500</div>
+          <div class="cmp-cell cmp-val">91,200</div>
+          <div class="cmp-cell cmp-val">1,04,000</div>
+
+          <div class="cmp-cell cmp-key">Subtotal × 4</div>
+          <div class="cmp-cell cmp-val winner">3,30,000</div>
+          <div class="cmp-cell cmp-val">3,64,800</div>
+          <div class="cmp-cell cmp-val">4,16,000</div>
+
+          <div class="cmp-cell cmp-key">Shipping</div>
+          <div class="cmp-cell cmp-val">12,000</div>
+          <div class="cmp-cell cmp-val">8,400</div>
+          <div class="cmp-cell cmp-val">22,000</div>
+
+          <div class="cmp-cell cmp-key">Insurance + Packing</div>
+          <div class="cmp-cell cmp-val">4,200</div>
+          <div class="cmp-cell cmp-val">3,800</div>
+          <div class="cmp-cell cmp-val">6,100</div>
+
+          <div class="cmp-cell cmp-key">GST 18%</div>
+          <div class="cmp-cell cmp-val">59,436</div>
+          <div class="cmp-cell cmp-val">66,924</div>
+          <div class="cmp-cell cmp-val">80,118</div>
+
+          <div class="cmp-cell cmp-key fw7">Total</div>
+          <div class="cmp-cell cmp-val cmp-total winner">4,05,636</div>
+          <div class="cmp-cell cmp-val cmp-total">4,43,924</div>
+          <div class="cmp-cell cmp-val cmp-total">5,24,218</div>
+
+          <div class="cmp-cell cmp-key">Lead Time</div>
+          <div class="cmp-cell cmp-val winner">3 days</div>
+          <div class="cmp-cell cmp-val">5 days</div>
+          <div class="cmp-cell cmp-val">10 days</div>
+
+          <div class="cmp-cell cmp-key">Origin</div>
+          <div class="cmp-cell cmp-val">Germany (OEM)</div>
+          <div class="cmp-cell cmp-val">Germany (OEM)</div>
+          <div class="cmp-cell cmp-val">Germany (OEM)</div>
+
+          <div class="cmp-cell cmp-key">Quote Valid</div>
+          <div class="cmp-cell cmp-val" style="border-bottom:none">14 days</div>
+          <div class="cmp-cell cmp-val" style="border-bottom:none">7 days</div>
+          <div class="cmp-cell cmp-val" style="border-bottom:none">10 days</div>
+        </div>
+
+        <div class="panel mb16">
+          <div class="panel-head"><span class="panel-title">Pricing Engine Output</span><span class="mono c3">20% Margin Applied</span></div>
+          <div class="panel-body">
+            <div class="grid-3">
+              <div><div class="sec-label">Supplier Cost (A)</div><div style="font-size:24px;font-weight:900;letter-spacing:-0.04em">INR 4,05,636</div></div>
+              <div><div class="sec-label">Margin Added (20%)</div><div style="font-size:24px;font-weight:900;letter-spacing:-0.04em;color:var(--amber)">+ 81,127</div></div>
+              <div><div class="sec-label">Customer Quotation</div><div style="font-size:24px;font-weight:900;letter-spacing:-0.04em;color:var(--green)">INR 4,86,763</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary">Select Supplier A &amp; Issue Quote</button>
+          <button class="btn btn-outline">Negotiate Further</button>
+          <button class="btn btn-ghost">Hold</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI AGENTS -->
+    <div class="view" id="adm-agents">
+      <div class="ph"><div class="ph-title">AI Agents</div><div class="ph-meta">6 Agents · Enrichment, Routing, Pricing, Validation</div></div>
+      <div class="content">
+        <div class="agent-list">
+          <div class="agent-item"><div class="a-dot"></div><div><div class="a-name">Product Enrichment Agent</div><div class="a-desc">Processing OCP-MAN-04891 — extracting specs from MAN B&W catalogue</div></div><span class="tag tag-green">Active</span></div>
+          <div class="agent-item"><div class="a-dot working"></div><div><div class="a-name">RFQ Routing Agent</div><div class="a-desc">RFQ-24872 — evaluating 14 suppliers for CAT 3306 heat exchanger, shortlisting 3</div></div><span class="tag tag-amber">Routing</span></div>
+          <div class="agent-item"><div class="a-dot"></div><div><div class="a-name">Pricing Agent</div><div class="a-desc">QT-2026-0892 — applying 20% margin + quantity discount for 4 units</div></div><span class="tag tag-green">Active</span></div>
+          <div class="agent-item"><div class="a-dot"></div><div><div class="a-name">Inventory Monitor</div><div class="a-desc">7 stale alerts dispatched to Oceanic Parts — 3 suppliers pending review</div></div><span class="tag tag-green">Active</span></div>
+          <div class="agent-item"><div class="a-dot idle"></div><div><div class="a-name">Supplier Recommendation Agent</div><div class="a-desc">Idle — last run 4 hours ago, ranked 8 suppliers in Wartsila category</div></div><span class="tag tag-grey">Idle</span></div>
+          <div class="agent-item"><div class="a-dot"></div><div><div class="a-name">Data Validation Agent</div><div class="a-desc">2 duplicate part numbers flagged, 1 inconsistent spec detected in new uploads</div></div><span class="tag tag-green">Active</span></div>
+        </div>
+        <div class="panel mt12">
+          <div class="panel-head"><span class="panel-title">Recent Activity</span></div>
+          <div class="activity">
+            <div class="activity-row"><span class="a-time">09:41</span><span>RFQ Router — RFQ-24871 dispatched to 3 qualified suppliers</span></div>
+            <div class="activity-row"><span class="a-time">09:38</span><span>Pricing Agent — Margin applied, customer quote INR 4,86,763 generated</span></div>
+            <div class="activity-row"><span class="a-time">09:22</span><span>Inventory Monitor — Stale alert sent to Oceanic Parts (7 products, 45+ days)</span></div>
+            <div class="activity-row"><span class="a-time">08:55</span><span>Data Validation — Duplicate OEM flagged: 5510900345 vs S55109-00345, merged</span></div>
+            <div class="activity-row"><span class="a-time">08:30</span><span>Product Enrichment — SKF-STB-462: 6 specs extracted, 4 vessel models mapped</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICING ENGINE -->
+    <div class="view" id="adm-pricing">
+      <div class="ph"><div class="ph-title">Pricing Engine</div><div class="ph-meta">Margins, Discounts &amp; Overrides</div></div>
+      <div class="content">
+        <div class="grid-2">
+          <div>
+            <div class="panel mb16">
+              <div class="panel-head"><span class="panel-title">Category Margins</span></div>
+              <div class="panel-body flush">
+                <div class="margin-item"><span class="margin-name">Global Default</span><span class="margin-val">20%</span></div>
+                <div class="margin-item"><span class="margin-name">Propulsion / Custom</span><span class="margin-val">28%</span></div>
+                <div class="margin-item"><span class="margin-name">OEM Critical Parts</span><span class="margin-val">18%</span></div>
+                <div class="margin-item"><span class="margin-name">Consumables &amp; Seals</span><span class="margin-val">32%</span></div>
+                <div class="margin-item"><span class="margin-name">Dynamic Pricing</span><span class="margin-val muted">Manual</span></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">Quantity Discounts</span></div>
+              <div class="panel-body flush">
+                <div class="margin-item"><span class="margin-name">1 unit</span><span class="margin-val muted">0%</span></div>
+                <div class="margin-item"><span class="margin-name">2–4 units</span><span class="margin-val green">-3%</span></div>
+                <div class="margin-item"><span class="margin-name">5–9 units</span><span class="margin-val green">-6%</span></div>
+                <div class="margin-item"><span class="margin-name">10–24 units</span><span class="margin-val green">-10%</span></div>
+                <div class="margin-item"><span class="margin-name">25+ units</span><span class="margin-val green">-15%</span></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="panel mb16">
+              <div class="panel-head"><span class="panel-title">Product Overrides</span><button class="btn btn-outline btn-sm">+ Add</button></div>
+              <div class="panel-body flush">
+                <table>
+                  <thead><tr><th>Part Number</th><th>Product</th><th>Margin</th><th></th></tr></thead>
+                  <tbody>
+                    <tr><td class="mono c3">5510900345</td><td>MAN Fuel Pump</td><td class="fw7 c-acc">18%</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+                    <tr><td class="mono c3">ABB-P4-1800</td><td>MB Propeller</td><td class="fw7 c-acc">Manual</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+                    <tr><td class="mono c3">WRT-BP-46C</td><td>Wartsila Booster Pump</td><td class="fw7 c-acc">22%</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">Pricing Simulator</span></div>
+              <div class="panel-body flush">
+                <div class="form-grid g1">
+                  <div class="field"><label>Supplier Cost (INR)</label><input type="text" class="input" value="82,500"></div>
+                  <div class="field"><label>Quantity</label><input type="number" class="input" value="4"></div>
+                  <div class="field"><label>Category</label><select class="input"><option>Fuel Systems — 18%</option></select></div>
+                </div>
+                <div class="total-row">
+                  <div class="total-label">Simulated Price per Unit</div>
+                  <div class="total-val">INR 97,350</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUPPLIER PERFORMANCE -->
+    <div class="view" id="adm-suppliers">
+      <div class="ph"><div class="ph-title">Supplier Performance</div><div class="ph-meta">18 Active Suppliers · YTD 2026</div></div>
+      <div class="content">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Supplier</th><th>Specialization</th><th>Response Rate</th><th>Avg Response</th><th>Fill Rate</th><th>vs Market</th><th>Rating</th></tr></thead>
+            <tbody>
+              <tr><td><div class="td-name">Oceanic Parts Pvt. Ltd.</div><div class="td-sub">Mumbai, India</div></td><td class="c2 f12">MAN, Wartsila, CAT</td><td class="fw7 c-grn">94%</td><td>1.8 hrs</td><td class="fw7 c-grn">91%</td><td class="fw7 c-grn">-6.2%</td><td><span class="tag tag-green">9.1 / 10</span></td></tr>
+              <tr><td><div class="td-name">SG Marine Supplies</div><div class="td-sub">Singapore</div></td><td class="c2 f12">SKF, ABB, Cedervall</td><td class="fw7 c-grn">88%</td><td>3.1 hrs</td><td class="fw7 c-amb">84%</td><td class="c-amb">+2.1%</td><td><span class="tag tag-grey">7.6 / 10</span></td></tr>
+              <tr><td><div class="td-name">Nordmann Maritime GmbH</div><div class="td-sub">Hamburg, Germany</div></td><td class="c2 f12">MAN, Wartsila OEM</td><td class="fw7 c-amb">71%</td><td>6.4 hrs</td><td class="fw7">88%</td><td class="fw7 c-acc">+14.8%</td><td><span class="tag tag-grey">6.2 / 10</span></td></tr>
+              <tr><td><div class="td-name">Gulf Marine Trading</div><div class="td-sub">Dubai, UAE</div></td><td class="c2 f12">CAT, Cummins, Detroit</td><td class="fw7 c-acc">52%</td><td>11.2 hrs</td><td class="fw7 c-acc">61%</td><td class="c-amb">+5.4%</td><td><span class="tag tag-red">4.1 / 10</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER WORKFLOW -->
+    <div class="view" id="adm-workflow">
+      <div class="ph"><div class="ph-title">Order Workflow</div><div class="ph-meta">RFQ-24871 · MV Pacific Voyager · Step 7 of 13</div></div>
+      <div class="content">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">Procurement Steps</span></div>
+            <div class="panel-body">
+              <div class="wf-list">
+                <div class="wf-item"><div class="wf-num done">1</div><div><div class="wf-label">Supplier Product Upload</div><div class="wf-sub green">Oceanic Parts — 142 products</div></div></div>
+                <div class="wf-item"><div class="wf-num done">2</div><div><div class="wf-label">AI Product Enrichment</div><div class="wf-sub green">Specs, compatibility, description generated</div></div></div>
+                <div class="wf-item"><div class="wf-num done">3</div><div><div class="wf-label">Product Published</div><div class="wf-sub green">Live and searchable on platform</div></div></div>
+                <div class="wf-item"><div class="wf-num done">4</div><div><div class="wf-label">Customer RFQ Submitted</div><div class="wf-sub green">Pacific Marine Ltd. — 3 items</div></div></div>
+                <div class="wf-item"><div class="wf-num done">5</div><div><div class="wf-label">AI Routes RFQ to Suppliers</div><div class="wf-sub green">3 suppliers selected and notified</div></div></div>
+                <div class="wf-item"><div class="wf-num done">6</div><div><div class="wf-label">Supplier Responses Received</div><div class="wf-sub green">3 of 3 responded</div></div></div>
+                <div class="wf-item"><div class="wf-num active">7</div><div><div class="wf-label">Internal Quote Comparison</div><div class="wf-sub amber">In progress — select best supplier</div></div></div>
+                <div class="wf-item"><div class="wf-num">8</div><div><div class="wf-label">Pricing Engine Applies Margins</div><div class="wf-sub">Pending</div></div></div>
+                <div class="wf-item"><div class="wf-num">9</div><div><div class="wf-label">Customer Receives Quotation</div><div class="wf-sub">Pending</div></div></div>
+                <div class="wf-item"><div class="wf-num">10</div><div><div class="wf-label">Customer Confirms Order</div><div class="wf-sub">Pending</div></div></div>
+                <div class="wf-item"><div class="wf-num">11</div><div><div class="wf-label">Purchase Order to Supplier</div><div class="wf-sub">Pending</div></div></div>
+                <div class="wf-item"><div class="wf-num">12</div><div><div class="wf-label">Supplier Dispatches Goods</div><div class="wf-sub">Pending</div></div></div>
+                <div class="wf-item"><div class="wf-num">13</div><div><div class="wf-label">Customer Tracks Shipment</div><div class="wf-sub">Pending</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="stats" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+              <div class="stat"><div class="stat-val amber">7/13</div><div class="stat-label">Steps Complete</div></div>
+              <div class="stat"><div class="stat-val green">3</div><div class="stat-label">Supplier Responses</div></div>
+              <div class="stat"><div class="stat-val green">0</div><div class="stat-label">Manual Actions</div></div>
+              <div class="stat"><div class="stat-val">4h</div><div class="stat-label">Time Elapsed</div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">Activity</span></div>
+              <div class="activity">
+                <div class="activity-row"><span class="a-time">09:41</span><span>RFQ-24871 dispatched to 3 suppliers via AI routing</span></div>
+                <div class="activity-row"><span class="a-time">10:12</span><span>Oceanic Parts responded — INR 82,500/unit</span></div>
+                <div class="activity-row"><span class="a-time">10:44</span><span>SG Marine responded — INR 91,200/unit</span></div>
+                <div class="activity-row"><span class="a-time">11:20</span><span>Nordmann Maritime responded — INR 1,04,000/unit</span></div>
+                <div class="activity-row" style="color:var(--amber)"><span class="a-time" style="color:var(--amber)">Now</span><span>Awaiting selection. Recommended: Oceanic Parts</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const portalIdx = {customer:0,supplier:1,admin:2};
+const prefixes  = {customer:'cust-',supplier:'supp-',admin:'adm-'};
+const views     = {
+  customer:['search','product','rfq','tracking','quotations','chat'],
+  supplier:['dashboard','rfqresponse','productupload','inventory'],
+  admin:   ['comparison','agents','pricing','suppliers','workflow'],
+};
+function switchPortal(id) {
+  document.querySelectorAll('.portal').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.portal-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('portal-'+id).classList.add('active');
+  document.querySelectorAll('.portal-tab')[portalIdx[id]].classList.add('active');
+}
+function switchView(portal,view) {
+  const p=prefixes[portal];
+  views[portal].forEach(v=>{const el=document.getElementById(p+v);if(el)el.classList.remove('active');});
+  const t=document.getElementById(p+view);
+  if(t)t.classList.add('active');
+  const sb=document.querySelector('#portal-'+portal+' .sidebar');
+  if(sb){
+    sb.querySelectorAll('.sidebar-item').forEach(l=>l.classList.remove('active'));
+    const links=sb.querySelectorAll('.sidebar-item');
+    const i=views[portal].indexOf(view);
+    if(links[i])links[i].classList.add('active');
+  }
+}
+</script>
+</body>
+</html>
